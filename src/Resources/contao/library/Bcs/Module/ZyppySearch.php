@@ -81,8 +81,8 @@ class ZyppySearch extends ModuleSearch
 
 		$this->Template->class .= ' zyppy_search_' .$this->id;
 
-		if (!in_array('system/modules/zyppy_search/assets/js/search.js', $GLOBALS['TL_JAVASCRIPT'])) {
-			$GLOBALS['TL_JAVASCRIPT'][] = 'system/modules/zyppy_search/assets/js/search.js';
+		if (!in_array('bundles/bcssearch/js/contao_search.js', $GLOBALS['TL_JAVASCRIPT'])) {
+			$GLOBALS['TL_JAVASCRIPT'][] = 'bundles/bcssearch/js/contao_search.js';
 		}
 
 		// Mark the x and y parameter as used (see #4277)
@@ -112,7 +112,7 @@ class ZyppySearch extends ModuleSearch
 		$this->Template->search = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['searchLabel']);
 		$this->Template->matchAll = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['matchAll']);
 		$this->Template->matchAny = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['matchAny']);
-		$this->Template->action = ampersand(Environment::get('indexFreeRequest'));
+		$this->Template->action = StringUtil::ampersand(Environment::get('indexFreeRequest'));
 		$this->Template->advanced = ($this->searchType == 'advanced');
 
 		// Redirect page
@@ -328,7 +328,7 @@ class ZyppySearch extends ModuleSearch
 						$objTemplate->pageDescription = $objResultPage->description;
 					}
 
-					if (\Input::get('debug')) {
+					if (\Contao\Input::get('debug')) {
 						echo "Format News Teaser: " .$this->formatNewsTeaser ."<br>";
 						echo "News Teaser Limit: " .$this->newsTeaserLimit ."<br>";
 						echo "Format Page Teaser: " .$this->formatPageTeaser ."<br>";
