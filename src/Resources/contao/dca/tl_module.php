@@ -37,7 +37,7 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['ajaxTpl'] = array
 	'inputType'               => 'select',
 	'options_callback' => static function ()
 	{
-		return Controller::getTemplateGroup('search_');
+		return \Contao\Controller::getTemplateGroup('search_');
 	},
 	'eval'                    => array('tl_class'=>'w50'),
 	'sql'                     => "varchar(64) NOT NULL default ''"
