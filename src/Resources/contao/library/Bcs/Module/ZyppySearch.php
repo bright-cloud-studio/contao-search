@@ -328,7 +328,7 @@ class ZyppySearch extends ModuleSearch
 						$objTemplate->pageDescription = $objResultPage->description;
 					}
 
-					if (Input::get('debug')) {
+					if (\Input::get('debug')) {
 						echo "Format News Teaser: " .$this->formatNewsTeaser ."<br>";
 						echo "News Teaser Limit: " .$this->newsTeaserLimit ."<br>";
 						echo "Format Page Teaser: " .$this->formatPageTeaser ."<br>";
