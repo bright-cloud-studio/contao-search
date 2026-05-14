@@ -9,21 +9,5 @@
  * @link       https://andrewstevens.consulting
  */
 
-
-/**
- * Register the classes
- */
-ClassLoader::addClasses(array
-(
-    'ZyppySearch\Module\ZyppySearch' 	=> 'system/modules/zyppy_search/library/ZyppySearch/Module/ZyppySearch.php'
-));
-
-
-/**
- * Register the templates
- */
-TemplateLoader::addFiles(array
-(
-	'mod_search_zyppy' 		=> 'system/modules/zyppy_search/templates/modules',
-	'search_zyppy' 			=> 'system/modules/zyppy_search/templates/search',
-));
+// Legacy autoload.php — class and template registration is handled by
+// Composer classmap autoloading and Contao's bundle template discovery.

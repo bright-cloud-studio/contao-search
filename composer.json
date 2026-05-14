@@ -19,7 +19,7 @@
     },
     "require":{
         "php": "^8.1",
-        "contao/core-bundle": "^5.3"
+        "contao/core-bundle": "^5.7"
     },
     "extra":{
         "contao-manager-plugin": "Bcs\\SearchBundle\\ContaoManager\\Plugin"

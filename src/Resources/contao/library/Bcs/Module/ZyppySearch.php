@@ -19,6 +19,7 @@ use Contao\CoreBundle\Security\ContaoCorePermissions;
 
 use Contao\BackendTemplate;
 use Contao\Config;
+use Contao\Database;
 use Contao\Environment;
 use Contao\FilesModel;
 use Contao\FrontendTemplate;
@@ -27,8 +28,9 @@ use Contao\ModuleSearch;
 use Contao\NewsModel;
 use Contao\PageModel;
 use Contao\Pagination;
-use Contao\StringUtil;
 use Contao\Search;
+use Contao\SearchResult;
+use Contao\StringUtil;
 use Contao\System;
 
 
@@ -139,7 +141,7 @@ class ZyppySearch extends ModuleSearch
 				foreach ($this->pages as $intPageId)
 				{
 					$arrPages[] = array($intPageId);
-					$arrPages[] = $this->Database->getChildRecords($intPageId, 'tl_page');
+					$arrPages[] = Database::getInstance()->getChildRecords($intPageId, 'tl_page');
 				}
 
 				if (!empty($arrPages))
@@ -156,7 +158,7 @@ class ZyppySearch extends ModuleSearch
 				global $objPage;
 
 				$varRootId = $objPage->rootId;
-				$arrPages = $this->Database->getChildRecords($objPage->rootId, 'tl_page');
+				$arrPages = Database::getInstance()->getChildRecords($objPage->rootId, 'tl_page');
 			}
 
 			// HOOK: add custom logic (see #5223)
@@ -185,7 +187,7 @@ class ZyppySearch extends ModuleSearch
 			{
 				System::getContainer()->get('monolog.logger.contao.error')->error('Website search failed: ' . $e->getMessage());
 
-				$objResult = new SearchResult(array());
+				$objResult = new SearchResult([]);
 			}
 
 			$query_endtime = microtime(true);
@@ -328,7 +330,7 @@ class ZyppySearch extends ModuleSearch
 						$objTemplate->pageDescription = $objResultPage->description;
 					}
 
-					if (\Input::get('debug')) {
+					if (Input::get('debug')) {
 						echo "Format News Teaser: " .$this->formatNewsTeaser ."<br>";
 						echo "News Teaser Limit: " .$this->newsTeaserLimit ."<br>";
 						echo "Format Page Teaser: " .$this->formatPageTeaser ."<br>";
