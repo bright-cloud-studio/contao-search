@@ -329,23 +329,6 @@ class ZyppySearch extends ModuleSearch
 						$objTemplate->pageDescription = $objResultPage->description;
 					}
 
-					if (Input::get('debug')) {
-						echo "<hr><strong>Result #" . $i . ":</strong> " . $arrResult[$i]['url'] . "<br>";
-						echo "Page ID (pid): " . ($objResultPage ? $objResultPage->id : 'null') . "<br>";
-						echo "News alias tried: <strong>" . ($strNewsAlias ?? '—') . "</strong><br>";
-						echo "NewsModel found: " . (isset($objNewsModel) && $objNewsModel ? 'YES (id:'.$objNewsModel->id.')' : 'NO') . "<br>";
-						if (isset($objNewsModel) && $objNewsModel) {
-							echo "addImage: " . ($objNewsModel->addImage ? 'YES' : 'NO') . "<br>";
-							echo "singleSRC: " . ($objNewsModel->singleSRC ? 'set' : 'empty') . "<br>";
-						}
-						echo "page_image on page: " . ($objResultPage && $objResultPage->page_image ? 'set' : 'not set') . "<br>";
-						echo "newsImage: " . ($objTemplate->newsImage ?? 'not set') . "<br>";
-						echo "pageImage: " . ($objTemplate->pageImage ?? 'not set') . "<br>";
-						echo "newsTeaser: " . ($objTemplate->newsTeaser ? substr(strip_tags($objTemplate->newsTeaser), 0, 80).'…' : 'not set') . "<br>";
-						echo "pageTeaser: " . ($objTemplate->pageTeaser ? substr(strip_tags($objTemplate->pageTeaser), 0, 80).'…' : 'not set') . "<br>";
-						echo "pageDescription: " . ($objTemplate->pageDescription ? substr(strip_tags($objTemplate->pageDescription), 0, 80).'…' : 'not set') . "<br>";
-						echo "<hr>";
-					}
 
 				}
 
