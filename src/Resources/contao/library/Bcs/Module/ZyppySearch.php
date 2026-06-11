@@ -290,9 +290,11 @@ class ZyppySearch extends ModuleSearch
 
 
 				if ($objResultPage) {
-					if ($objResultPage->zyppy_news) {
-						$strNewsAlias = basename($arrResult[$i]['url'], '.html');
-						$objNewsModel = NewsModel::findBy('alias', $strNewsAlias);
+					// Automatically detect news articles by alias — no zyppy_news flag required on the page.
+					// Strip query string before extracting alias so URLs like /page?cid=123 still work.
+					$strNewsAlias = basename(strtok($arrResult[$i]['url'], '?'), '.html');
+					if ($strNewsAlias) {
+						$objNewsModel = NewsModel::findOneBy('alias', $strNewsAlias);
 
 						if ($objNewsModel) {
 							$objTemplate->isNews = 1;
@@ -330,16 +332,11 @@ class ZyppySearch extends ModuleSearch
 					if (Input::get('debug')) {
 						echo "<hr><strong>Result #" . $i . ":</strong> " . $arrResult[$i]['url'] . "<br>";
 						echo "Page ID (pid): " . ($objResultPage ? $objResultPage->id : 'null') . "<br>";
-						echo "zyppy_news flag: " . ($objResultPage && $objResultPage->zyppy_news ? 'YES' : 'NO') . "<br>";
-						if ($objResultPage && $objResultPage->zyppy_news) {
-							$strDbgAlias = basename($arrResult[$i]['url'], '.html');
-							echo "Looking up news alias: <strong>" . $strDbgAlias . "</strong><br>";
-							$objDbgNews = NewsModel::findBy('alias', $strDbgAlias);
-							echo "NewsModel found: " . ($objDbgNews ? 'YES (id:'.$objDbgNews->id.')' : 'NO') . "<br>";
-							if ($objDbgNews) {
-								echo "addImage: " . ($objDbgNews->addImage ? 'YES' : 'NO') . "<br>";
-								echo "singleSRC: " . ($objDbgNews->singleSRC ? bin2hex($objDbgNews->singleSRC) : 'empty') . "<br>";
-							}
+						echo "News alias tried: <strong>" . ($strNewsAlias ?? '—') . "</strong><br>";
+						echo "NewsModel found: " . (isset($objNewsModel) && $objNewsModel ? 'YES (id:'.$objNewsModel->id.')' : 'NO') . "<br>";
+						if (isset($objNewsModel) && $objNewsModel) {
+							echo "addImage: " . ($objNewsModel->addImage ? 'YES' : 'NO') . "<br>";
+							echo "singleSRC: " . ($objNewsModel->singleSRC ? 'set' : 'empty') . "<br>";
 						}
 						echo "page_image on page: " . ($objResultPage && $objResultPage->page_image ? 'set' : 'not set') . "<br>";
 						echo "newsImage: " . ($objTemplate->newsImage ?? 'not set') . "<br>";
