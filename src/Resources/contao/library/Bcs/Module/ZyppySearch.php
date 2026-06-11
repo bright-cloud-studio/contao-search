@@ -328,13 +328,26 @@ class ZyppySearch extends ModuleSearch
 					}
 
 					if (Input::get('debug')) {
-						echo "Format News Teaser: " .$this->formatNewsTeaser ."<br>";
-						echo "News Teaser Limit: " .$this->newsTeaserLimit ."<br>";
-						echo "Format Page Teaser: " .$this->formatPageTeaser ."<br>";
-						echo "Page Teaser Limit: " .$this->pageTeaserLimit ."<br>";
-						echo "Format Page Description: " .$this->formatPageDescription ."<br>";
-						echo "Page Description Limit: " .$this->pageDescriptionLimit ."<br>";
-						die();
+						echo "<hr><strong>Result #" . $i . ":</strong> " . $arrResult[$i]['url'] . "<br>";
+						echo "Page ID (pid): " . ($objResultPage ? $objResultPage->id : 'null') . "<br>";
+						echo "zyppy_news flag: " . ($objResultPage && $objResultPage->zyppy_news ? 'YES' : 'NO') . "<br>";
+						if ($objResultPage && $objResultPage->zyppy_news) {
+							$strDbgAlias = basename($arrResult[$i]['url'], '.html');
+							echo "Looking up news alias: <strong>" . $strDbgAlias . "</strong><br>";
+							$objDbgNews = NewsModel::findBy('alias', $strDbgAlias);
+							echo "NewsModel found: " . ($objDbgNews ? 'YES (id:'.$objDbgNews->id.')' : 'NO') . "<br>";
+							if ($objDbgNews) {
+								echo "addImage: " . ($objDbgNews->addImage ? 'YES' : 'NO') . "<br>";
+								echo "singleSRC: " . ($objDbgNews->singleSRC ? bin2hex($objDbgNews->singleSRC) : 'empty') . "<br>";
+							}
+						}
+						echo "page_image on page: " . ($objResultPage && $objResultPage->page_image ? 'set' : 'not set') . "<br>";
+						echo "newsImage: " . ($objTemplate->newsImage ?? 'not set') . "<br>";
+						echo "pageImage: " . ($objTemplate->pageImage ?? 'not set') . "<br>";
+						echo "newsTeaser: " . ($objTemplate->newsTeaser ? substr(strip_tags($objTemplate->newsTeaser), 0, 80).'…' : 'not set') . "<br>";
+						echo "pageTeaser: " . ($objTemplate->pageTeaser ? substr(strip_tags($objTemplate->pageTeaser), 0, 80).'…' : 'not set') . "<br>";
+						echo "pageDescription: " . ($objTemplate->pageDescription ? substr(strip_tags($objTemplate->pageDescription), 0, 80).'…' : 'not set') . "<br>";
+						echo "<hr>";
 					}
 
 				}
