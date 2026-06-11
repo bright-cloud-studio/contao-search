@@ -299,7 +299,7 @@ class ZyppySearch extends ModuleSearch
 							if ($objNewsModel->addImage && $objNewsModel->singleSRC) {
 								$uuid = StringUtil::binToUuid($objNewsModel->singleSRC);
 								$objFile = FilesModel::findByUuid($uuid);
-								$objTemplate->newsImage = $objFile->path;
+								$objTemplate->newsImage = $objFile?->path;
 							}
 							if ($this->formatNewsTeaser) {
 								$objTemplate->newsTeaser = $this->formatText($objNewsModel->teaser, $this->newsTeaserLimit);
@@ -312,7 +312,7 @@ class ZyppySearch extends ModuleSearch
 					if ($objResultPage->page_image) {
 						$uuid = StringUtil::binToUuid($objResultPage->page_image);
 						$objFile = FilesModel::findByUuid($uuid);
-						$objTemplate->pageImage = $objFile->path;
+						$objTemplate->pageImage = $objFile?->path;
 					}
 
 					if ($this->formatPageTeaser) {
