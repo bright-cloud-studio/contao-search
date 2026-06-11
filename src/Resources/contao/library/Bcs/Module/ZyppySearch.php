@@ -14,7 +14,6 @@
 namespace ZyppySearch\Module;
 
 use Contao\CoreBundle\Exception\PageNotFoundException;
-use Contao\CoreBundle\File\Metadata;
 use Contao\CoreBundle\Security\ContaoCorePermissions;
 
 use Contao\BackendTemplate;
@@ -298,7 +297,6 @@ class ZyppySearch extends ModuleSearch
 						if ($objNewsModel) {
 							$objTemplate->isNews = 1;
 							if ($objNewsModel->addImage && $objNewsModel->singleSRC) {
-								$strPhoto = '';
 								$uuid = StringUtil::binToUuid($objNewsModel->singleSRC);
 								$objFile = FilesModel::findByUuid($uuid);
 								$objTemplate->newsImage = $objFile->path;
@@ -312,7 +310,6 @@ class ZyppySearch extends ModuleSearch
 					}
 					$objTemplate->isPage = 1;
 					if ($objResultPage->page_image) {
-						$strPhoto = '';
 						$uuid = StringUtil::binToUuid($objResultPage->page_image);
 						$objFile = FilesModel::findByUuid($uuid);
 						$objTemplate->pageImage = $objFile->path;
