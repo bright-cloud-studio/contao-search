@@ -1,0 +1,35 @@
+/**
+ * Zyppy Search – loading spinner & result transitions
+ *
+ * Uses currentColor so the spinner inherits the text colour of whatever
+ * theme is active. Override .zyppy_spinner::after { border-top-color: … }
+ * in your theme CSS to use a specific brand colour.
+ */
+
+/* Hidden by default; shown by adding .is-active via JS */
+.zyppy_spinner {
+	display: none;
+	justify-content: center;
+	align-items: center;
+	padding: 1.5rem 0;
+}
+
+.zyppy_spinner.is-active {
+	display: flex;
+}
+
+/* Pure-CSS rotating ring — no image dependency */
+.zyppy_spinner::after {
+	content: '';
+	display: block;
+	width: 2rem;
+	height: 2rem;
+	border: 3px solid rgba(0, 0, 0, 0.15);
+	border-top-color: currentColor;
+	border-radius: 50%;
+	animation: zyppy_spin 0.65s linear infinite;
+}
+
+@keyframes zyppy_spin {
+	to { transform: rotate(360deg); }
+}

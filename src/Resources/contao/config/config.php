@@ -11,3 +11,6 @@
 
 /* Front End Module */
 $GLOBALS['FE_MOD']['application']['zyppy_search'] = 'ZyppySearch\Module\ZyppySearch';
+
+/* Assets */
+$GLOBALS['TL_CSS'][] = 'bundles/bcssearch/css/contao_search.css|static';

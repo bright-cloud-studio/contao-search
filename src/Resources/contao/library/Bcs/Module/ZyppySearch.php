@@ -14,7 +14,9 @@
 namespace ZyppySearch\Module;
 
 use Contao\CoreBundle\Exception\PageNotFoundException;
+use Contao\CoreBundle\Exception\ResponseException;
 use Contao\CoreBundle\Security\ContaoCorePermissions;
+use Symfony\Component\HttpFoundation\Response;
 
 use Contao\BackendTemplate;
 use Contao\Config;
@@ -215,7 +217,7 @@ class ZyppySearch extends ModuleSearch
 			if ($count < 1)
 			{
 				if ($boolAjax) {
-					exit();
+					throw new ResponseException(new Response('', 200, ['Content-Type' => 'text/html; charset=UTF-8']));
 				}
 
 				$this->Template->header = sprintf($GLOBALS['TL_LANG']['MSC']['sEmpty'], $strKeywords);
@@ -372,8 +374,7 @@ class ZyppySearch extends ModuleSearch
 			$this->Template->duration = System::getFormattedNumber($query_endtime - $query_starttime, 3) . ' ' . $GLOBALS['TL_LANG']['MSC']['seconds'];
 
 			if ($boolAjax && Input::get('zyppy_search') == 'zyppy_search_' .$this->id) {
-				echo $this->Template->results;
-				exit();
+				throw new ResponseException(new Response($this->Template->results, 200, ['Content-Type' => 'text/html; charset=UTF-8']));
 			}
 		}
 	}
