@@ -301,7 +301,7 @@ class ZyppySearch extends ModuleSearch
 							if ($objNewsModel->addImage && $objNewsModel->singleSRC) {
 								$uuid = StringUtil::binToUuid($objNewsModel->singleSRC);
 								$objFile = FilesModel::findByUuid($uuid);
-								$objTemplate->newsImage = $objFile?->path;
+								$objTemplate->newsImage = $objFile ? $this->resizeImage($objFile->path) : null;
 							}
 							if ($this->formatNewsTeaser) {
 								$objTemplate->newsTeaser = $this->formatText($objNewsModel->teaser, $this->newsTeaserLimit);
@@ -314,7 +314,7 @@ class ZyppySearch extends ModuleSearch
 					if ($objResultPage->page_image) {
 						$uuid = StringUtil::binToUuid($objResultPage->page_image);
 						$objFile = FilesModel::findByUuid($uuid);
-						$objTemplate->pageImage = $objFile?->path;
+						$objTemplate->pageImage = $objFile ? $this->resizeImage($objFile->path) : null;
 					}
 
 					if ($this->formatPageTeaser) {
@@ -375,6 +375,31 @@ class ZyppySearch extends ModuleSearch
 				echo $this->Template->results;
 				exit();
 			}
+		}
+	}
+
+	/**
+	 * Resize an image path using the module's imgSize setting.
+	 * Falls back to the original path when no size is configured or resizing fails.
+	 */
+	protected function resizeImage(string $path): string
+	{
+		$size = StringUtil::deserialize($this->imgSize);
+
+		if (!$size) {
+			return $path;
+		}
+
+		try {
+			$figure = System::getContainer()
+				->get('contao.image.studio')
+				->createFigureBuilder()
+				->fromPath($path)
+				->setSize($size)
+				->build();
+			return $figure->getImage()->getImageSrc();
+		} catch (\Exception $e) {
+			return $path;
 		}
 	}
 
