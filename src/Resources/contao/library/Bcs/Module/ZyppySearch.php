@@ -387,19 +387,29 @@ class ZyppySearch extends ModuleSearch
 	{
 		$size = StringUtil::deserialize($this->imgSize);
 
-		if (!$size) {
+		if (empty($size)) {
 			return $path;
 		}
 
+		$container = System::getContainer();
+
 		try {
-			$figure = System::getContainer()
+			// fromPath() requires an absolute filesystem path in Contao 5
+			$projectDir = $container->getParameter('kernel.project_dir');
+
+			$figure = $container
 				->get('contao.image.studio')
 				->createFigureBuilder()
-				->fromPath($path)
+				->fromPath($projectDir . '/' . $path, true)
 				->setSize($size)
 				->build();
+
 			return $figure->getImage()->getImageSrc();
 		} catch (\Exception $e) {
+			$container->get('monolog.logger.contao.error')->error(
+				'ZyppySearch: image resize failed for "' . $path . '" with size "' . print_r($size, true) . '": ' . $e->getMessage()
+			);
+
 			return $path;
 		}
 	}
