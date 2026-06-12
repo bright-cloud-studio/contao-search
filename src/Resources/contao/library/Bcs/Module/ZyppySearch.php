@@ -303,7 +303,14 @@ class ZyppySearch extends ModuleSearch
 							if ($objNewsModel->addImage && $objNewsModel->singleSRC) {
 								$uuid = StringUtil::binToUuid($objNewsModel->singleSRC);
 								$objFile = FilesModel::findByUuid($uuid);
-								$objTemplate->newsImage = $objFile ? $this->resizeImage($objFile->path) : null;
+								if ($objFile) {
+									$rendered = $this->renderSearchImage($objFile->path);
+									if ($rendered !== null) {
+										$objTemplate->newsImageHtml = $rendered;
+									} else {
+										$objTemplate->newsImage = $objFile->path;
+									}
+								}
 							}
 							if ($this->formatNewsTeaser) {
 								$objTemplate->newsTeaser = $this->formatText($objNewsModel->teaser, $this->newsTeaserLimit);
@@ -316,7 +323,14 @@ class ZyppySearch extends ModuleSearch
 					if ($objResultPage->page_image) {
 						$uuid = StringUtil::binToUuid($objResultPage->page_image);
 						$objFile = FilesModel::findByUuid($uuid);
-						$objTemplate->pageImage = $objFile ? $this->resizeImage($objFile->path) : null;
+						if ($objFile) {
+							$rendered = $this->renderSearchImage($objFile->path);
+							if ($rendered !== null) {
+								$objTemplate->pageImageHtml = $rendered;
+							} else {
+								$objTemplate->pageImage = $objFile->path;
+							}
+						}
 					}
 
 					if ($this->formatPageTeaser) {
@@ -380,37 +394,81 @@ class ZyppySearch extends ModuleSearch
 	}
 
 	/**
-	 * Resize an image path using the module's imgSize setting.
-	 * Falls back to the original path when no size is configured or resizing fails.
+	 * Render a search result image as a full <picture> or <img> element,
+	 * applying the module's imgSize setting (resize + WebP conversion).
+	 *
+	 * Returns the HTML string on success, or null when no size is configured
+	 * or the image cannot be processed (caller should fall back to the raw path).
 	 */
-	protected function resizeImage(string $path): string
+	protected function renderSearchImage(string $path): ?string
 	{
 		$size = StringUtil::deserialize($this->imgSize);
 
 		if (empty($size)) {
-			return $path;
+			return null;
+		}
+
+		// Named sizes are stored as a numeric string ID (e.g. '3').
+		// Cast to int so the picture factory resolves the tl_image_size record
+		// rather than looking for a size named '3'.
+		if (!is_array($size) && is_numeric($size)) {
+			$size = (int) $size;
 		}
 
 		$container = System::getContainer();
 
 		try {
-			// fromPath() requires an absolute filesystem path in Contao 5
-			$projectDir = $container->getParameter('kernel.project_dir');
-
 			$figure = $container
 				->get('contao.image.studio')
 				->createFigureBuilder()
-				->fromPath($projectDir . '/' . $path, true)
+				->fromPath($container->getParameter('kernel.project_dir') . '/' . $path, true)
 				->setSize($size)
 				->build();
 
-			return $figure->getImage()->getImageSrc();
+			// applyLegacyTemplateData populates 'picture' with img + WebP sources
+			$data = new \stdClass();
+			$figure->applyLegacyTemplateData($data);
+
+			// Build <picture> element when WebP (or other format) sources exist
+			if (!empty($data->picture['sources'])) {
+				$html = '<picture>';
+
+				foreach ($data->picture['sources'] as $source) {
+					$html .= '<source';
+					foreach (['srcset', 'type', 'media', 'sizes'] as $attr) {
+						if (!empty($source[$attr])) {
+							$html .= ' ' . $attr . '="' . htmlspecialchars((string) $source[$attr]) . '"';
+						}
+					}
+					$html .= '>';
+				}
+
+				$img = $data->picture['img'] ?? [];
+				$html .= '<img class="page_image"';
+				foreach (['src', 'width', 'height', 'loading', 'alt'] as $attr) {
+					if (isset($img[$attr]) && $img[$attr] !== '') {
+						$html .= ' ' . $attr . '="' . htmlspecialchars((string) $img[$attr]) . '"';
+					}
+				}
+				$html .= '></picture>';
+
+				return $html;
+			}
+
+			// No additional sources — plain img with processed src
+			return '<img class="page_image"'
+				. ' src="' . htmlspecialchars((string) ($data->src ?? $path)) . '"'
+				. (!empty($data->width) ? ' width="' . (int) $data->width . '"' : '')
+				. (!empty($data->height) ? ' height="' . (int) $data->height . '"' : '')
+				. (!empty($data->loading) ? ' loading="' . htmlspecialchars($data->loading) . '"' : '')
+				. '>';
+
 		} catch (\Exception $e) {
 			$container->get('monolog.logger.contao.error')->error(
-				'ZyppySearch: image resize failed for "' . $path . '" with size "' . print_r($size, true) . '": ' . $e->getMessage()
+				'ZyppySearch: renderSearchImage failed for "' . $path . '": ' . $e->getMessage()
 			);
 
-			return $path;
+			return null;
 		}
 	}
 
