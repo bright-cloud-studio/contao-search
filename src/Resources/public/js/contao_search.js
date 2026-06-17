@@ -28,8 +28,14 @@ $( document ).ready(function() {
 		 */
 		function doSearch(wrapper, searchKeywords, queryType) {
 			var search = wrapper.find('input[name="zyppy_search"]').val();
+			// Module id: prefer an explicit hidden input, but fall back to the
+			// existing "zyppy_search_<id>" value so no template change is needed.
 			var moduleId = wrapper.find('input[name="zyppy_module_id"]').val();
-			var pageId = wrapper.find('input[name="zyppy_page_id"]').val();
+			if (!moduleId && search) {
+				moduleId = search.replace('zyppy_search_', '');
+			}
+			// Page id is optional — the server resolves the root by host if absent.
+			var pageId = wrapper.find('input[name="zyppy_page_id"]').val() || '';
 			var cacheKey = searchKeywords + '||' + (queryType || '');
 
 			// Instant result from cache — no network round-trip needed

@@ -58,7 +58,24 @@ class SearchController
 
         // Establish the page context. Root-scoped searches need $objPage->rootId,
         // and the result templates rely on $GLOBALS['TL_LANG'] / TL_LANGUAGE.
-        if ($pageId > 0 && ($objPage = PageModel::findWithDetails($pageId)) !== null) {
+        // Prefer an explicit page id; otherwise resolve the root page from the
+        // request host so we don't depend on a (possibly overridden) template
+        // exposing the page id.
+        $objPage = null;
+
+        if ($pageId > 0) {
+            $objPage = PageModel::findWithDetails($pageId);
+        }
+
+        if ($objPage === null) {
+            $objRoot = PageModel::findFirstPublishedRootByHostAndLanguage($request->getHost(), null);
+
+            if ($objRoot !== null) {
+                $objPage = PageModel::findWithDetails($objRoot->id);
+            }
+        }
+
+        if ($objPage !== null) {
             // "global $objPage" inside the module resolves to $GLOBALS['objPage'].
             $GLOBALS['objPage'] = $objPage;
             $request->attributes->set('pageModel', $objPage);
