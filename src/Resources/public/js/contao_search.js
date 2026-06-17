@@ -1,7 +1,9 @@
 $( document ).ready(function() {
 
 	var keywordsElement = $('div.mod_zyppy_search input[name="keywords"]');
-	var action = window.location.href.split('?')[0];
+	// Live search hits a dedicated lightweight endpoint that runs only the
+	// search module, skipping the full-page render of the current URL.
+	var action = '/_zyppy_search';
 
 	var request;
 	var debounceTimer;
@@ -26,6 +28,8 @@ $( document ).ready(function() {
 		 */
 		function doSearch(wrapper, searchKeywords, queryType) {
 			var search = wrapper.find('input[name="zyppy_search"]').val();
+			var moduleId = wrapper.find('input[name="zyppy_module_id"]').val();
+			var pageId = wrapper.find('input[name="zyppy_page_id"]').val();
 			var cacheKey = searchKeywords + '||' + (queryType || '');
 
 			// Instant result from cache — no network round-trip needed
@@ -38,7 +42,9 @@ $( document ).ready(function() {
 			var searchData = {
 				keywords:    searchKeywords,
 				IS_AJAX:     '1',
-				zyppy_search: search
+				zyppy_search: search,
+				id:          moduleId,
+				page:        pageId
 			};
 			if (queryType) {
 				searchData.query_type = queryType;

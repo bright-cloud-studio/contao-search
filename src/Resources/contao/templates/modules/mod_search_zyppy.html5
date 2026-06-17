@@ -4,6 +4,8 @@
 
   <form<?php if ($this->action): ?> action="<?= $this->action ?>"<?php endif; ?> method="get">
 	<input type="hidden" name="zyppy_search" value="zyppy_search_<?= $this->id ?>">
+	<input type="hidden" name="zyppy_module_id" value="<?= $this->moduleId ?>">
+	<input type="hidden" name="zyppy_page_id" value="<?= $this->currentPageId ?>">
     <div class="formbody">
       <div class="widget widget-text">
         <label for="ctrl_keywords_<?= $this->uniqueId ?>" class="invisible"><?= $this->keywordLabel ?></label>

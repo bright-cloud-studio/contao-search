@@ -84,6 +84,12 @@ class ZyppySearch extends ModuleSearch
 
 		$this->Template->class .= ' zyppy_search_' .$this->id;
 
+		// Expose ids so the JS live-search can target the lightweight
+		// /_zyppy_search endpoint (which skips the full-page render).
+		global $objPage;
+		$this->Template->moduleId = $this->id;
+		$this->Template->currentPageId = $objPage->id ?? 0;
+
 		if (!in_array('bundles/bcssearch/js/contao_search.js', $GLOBALS['TL_JAVASCRIPT'])) {
 			$GLOBALS['TL_JAVASCRIPT'][] = 'bundles/bcssearch/js/contao_search.js';
 		}

@@ -1,0 +1,7 @@
+bcs_zyppy_search:
+    path: /_zyppy_search
+    defaults:
+        _controller: Bcs\SearchBundle\Controller\SearchController
+        _scope: frontend
+        _token_check: false
+    methods: [GET]
