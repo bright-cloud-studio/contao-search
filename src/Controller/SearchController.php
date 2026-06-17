@@ -68,7 +68,13 @@ class SearchController
         }
 
         if ($objPage === null) {
-            $objRoot = PageModel::findFirstPublishedRootByHostAndLanguage($request->getHost(), null);
+            // Resolve the root page for this host (prefer an exact dns match
+            // over a domain-less root).
+            $objRoot = PageModel::findOneBy(
+                ["tl_page.type=?", "(tl_page.dns=? OR tl_page.dns='')"],
+                ['root', $request->getHost()],
+                ['order' => 'tl_page.dns DESC']
+            );
 
             if ($objRoot !== null) {
                 $objPage = PageModel::findWithDetails($objRoot->id);
@@ -87,6 +93,13 @@ class SearchController
         }
 
         System::loadLanguageFile('default');
+
+        // The module expects a normal front-end environment. These globals are
+        // populated during a full page render but not on this lightweight route,
+        // so initialise them to avoid "undefined global" errors in compile().
+        $GLOBALS['TL_JAVASCRIPT'] ??= [];
+        $GLOBALS['TL_CSS'] ??= [];
+        $GLOBALS['TL_HEAD'] ??= [];
 
         $strClass = Module::findClass($objModule->type);
 
