@@ -284,7 +284,9 @@ class ZyppySearch extends ModuleSearch
 
 				$objResultPage = PageModel::findByPk($arrResult[$i]['pid']);
 
-				$strTemplate = ($boolAjax ? $this->ajaxTpl : $this->searchTpl);
+				// Fall back to the full-page template (then search_default) when
+				// the AJAX template is empty, so live results match the on-page ones.
+				$strTemplate = ($boolAjax ? ($this->ajaxTpl ?: $this->searchTpl) : $this->searchTpl);
 
 				$objTemplate = new FrontendTemplate($strTemplate ? $strTemplate : 'search_default');
 				$objTemplate->setData($arrResult[$i]);
