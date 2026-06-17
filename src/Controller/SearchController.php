@@ -12,6 +12,7 @@ namespace Bcs\SearchBundle\Controller;
 
 use Contao\CoreBundle\Exception\ResponseException;
 use Contao\CoreBundle\Framework\ContaoFramework;
+use Contao\LayoutModel;
 use Contao\Module;
 use Contao\ModuleModel;
 use Contao\PageModel;
@@ -85,6 +86,14 @@ class SearchController
             // "global $objPage" inside the module resolves to $GLOBALS['objPage'].
             $GLOBALS['objPage'] = $objPage;
             $request->attributes->set('pageModel', $objPage);
+
+            // Theme template overrides (e.g. templates/<theme>) resolve via
+            // $objPage->templateGroup, which a full page render sets from the
+            // layout. Replicate that so the AJAX results use the same custom
+            // templates as the on-page results instead of the bundle defaults.
+            if ($objPage->layout && ($objLayout = LayoutModel::findByPk($objPage->layout)) !== null) {
+                $objPage->templateGroup = $objLayout->templates;
+            }
 
             if ($objPage->language) {
                 $GLOBALS['TL_LANGUAGE'] = $objPage->language;
