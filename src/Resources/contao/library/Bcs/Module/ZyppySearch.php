@@ -315,7 +315,7 @@ class ZyppySearch extends ModuleSearch
 							if ($this->formatNewsTeaser) {
 								$objTemplate->newsTeaser = $this->formatText($objNewsModel->teaser, $this->newsTeaserLimit);
 							} else {
-								$objTemplate->newsTeaser = $objNewsModel->teaser;
+								$objTemplate->newsTeaser = strip_tags($objNewsModel->teaser);
 							}
 						}
 					}
