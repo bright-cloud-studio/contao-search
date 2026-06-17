@@ -11,6 +11,7 @@
 namespace Bcs\SearchBundle\Controller;
 
 use Contao\CoreBundle\Exception\ResponseException;
+use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\Module;
 use Contao\ModuleModel;
 use Contao\PageModel;
@@ -30,10 +31,17 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class SearchController
 {
+    public function __construct(private readonly ContaoFramework $framework)
+    {
+    }
+
     public function __invoke(Request $request): Response
     {
+        // Inject the framework via DI — System::getContainer() is null here
+        // because this controller runs before Contao has booted its framework.
+        $this->framework->initialize();
+
         $container = System::getContainer();
-        $container->get('contao.framework')->initialize();
 
         $moduleId = (int) $request->query->get('id');
         $pageId   = (int) $request->query->get('page');

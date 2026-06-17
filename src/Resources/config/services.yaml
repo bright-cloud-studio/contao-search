@@ -1,0 +1,7 @@
+services:
+    Bcs\SearchBundle\Controller\SearchController:
+        public: true
+        arguments:
+            $framework: '@contao.framework'
+        tags:
+            - { name: controller.service_arguments }
