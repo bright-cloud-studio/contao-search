@@ -13,7 +13,7 @@
 /**
  * Palettes
  */
-$GLOBALS['TL_DCA']['tl_module']['palettes']['zyppy_search'] = '{title_legend},name,headline,type;{config_legend},queryType,fuzzy,contextLength,minKeywordLength,totalLength,perPage,searchType,disableAjax,formatPageTeaser,formatPageDescription,formatNewsTeaser;{redirect_legend:hide},jumpTo;{reference_legend:hide},pages;{template_legend:hide},searchTpl,ajaxTpl,customTpl;{protected_legend:hide},protected;{image_legend},imgSize;{expert_legend:hide},guests,cssID';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['zyppy_search'] = '{title_legend},name,headline,type;{config_legend},queryType,fuzzy,contextLength,minKeywordLength,totalLength,perPage,lazyLoadLimit,searchType,disableAjax,formatPageTeaser,formatPageDescription,formatNewsTeaser;{redirect_legend:hide},jumpTo;{reference_legend:hide},pages;{template_legend:hide},searchTpl,ajaxTpl,customTpl;{protected_legend:hide},protected;{image_legend},imgSize;{expert_legend:hide},guests,cssID';
 
 
 /**
@@ -41,6 +41,14 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['ajaxTpl'] = array
 	},
 	'eval'                    => array('tl_class'=>'w50'),
 	'sql'                     => "varchar(64) NOT NULL default ''"
+);
+
+$GLOBALS['TL_DCA']['tl_module']['fields']['lazyLoadLimit'] = array
+(
+	'label'                   => &$GLOBALS['TL_LANG']['tl_module']['lazyLoadLimit'],
+	'inputType'               => 'text',
+	'eval'                    => array('maxlength'=>10, 'rgxp'=>'natural', 'tl_class'=>'w50', 'placeholder'=>20),
+	'sql'                     => "int(10) unsigned NOT NULL default 20"
 );
 
 $GLOBALS['TL_DCA']['tl_module']['fields']['disableAjax'] = array

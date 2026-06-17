@@ -223,7 +223,7 @@ class ZyppySearch extends ModuleSearch
 			if ($count < 1)
 			{
 				if ($boolAjax) {
-					throw new ResponseException(new Response('', 200, ['Content-Type' => 'text/html; charset=UTF-8']));
+					throw new ResponseException(new Response('', 200, ['Content-Type' => 'text/html; charset=UTF-8', 'X-Zyppy-More' => '0']));
 				}
 
 				$this->Template->header = sprintf($GLOBALS['TL_LANG']['MSC']['sEmpty'], $strKeywords);
@@ -240,21 +240,23 @@ class ZyppySearch extends ModuleSearch
 			if ($boolAjax)
 			{
 				$intOffset = max(0, (int) Input::get('zyppy_offset'));
-				$intLimit = (int) Input::get('zyppy_limit');
+
+				// Batch size is configured per module (lazyLoadLimit), default 20.
+				$intLimit = (int) $this->lazyLoadLimit;
 
 				if ($intLimit < 1)
 				{
 					$intLimit = 20;
 				}
-				elseif ($intLimit > 50)
+				elseif ($intLimit > 200)
 				{
-					$intLimit = 50;
+					$intLimit = 200;
 				}
 
 				// Past the end — return nothing so the client stops requesting.
 				if ($intOffset >= $count)
 				{
-					throw new ResponseException(new Response('', 200, ['Content-Type' => 'text/html; charset=UTF-8']));
+					throw new ResponseException(new Response('', 200, ['Content-Type' => 'text/html; charset=UTF-8', 'X-Zyppy-More' => '0']));
 				}
 
 				$from = $intOffset + 1;
@@ -427,7 +429,11 @@ class ZyppySearch extends ModuleSearch
 			$this->Template->duration = System::getFormattedNumber($query_endtime - $query_starttime, 3) . ' ' . $GLOBALS['TL_LANG']['MSC']['seconds'];
 
 			if ($boolAjax && Input::get('zyppy_search') == 'zyppy_search_' .$this->id) {
-				throw new ResponseException(new Response($this->Template->results, 200, ['Content-Type' => 'text/html; charset=UTF-8']));
+				throw new ResponseException(new Response($this->Template->results, 200, [
+					'Content-Type' => 'text/html; charset=UTF-8',
+					'X-Zyppy-More' => ($to < $count) ? '1' : '0',
+					'X-Zyppy-Total' => (string) $count,
+				]));
 			}
 		}
 	}

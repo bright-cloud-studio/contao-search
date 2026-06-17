@@ -4,7 +4,8 @@ $( document ).ready(function() {
 	// search module, skipping the full-page render of the current URL.
 	var action = '/_zyppy_search';
 
-	// How many results to request per batch (must match / be <= the server cap).
+	// Fallback batch size for end-of-list detection if the server doesn't send
+	// the X-Zyppy-More header. The real batch size is the module's lazyLoadLimit.
 	var BATCH = 20;
 
 	// Distance (px) from the bottom at which the next batch is fetched.
@@ -104,8 +105,9 @@ $( document ).ready(function() {
 		 * Render a batch into the results container.
 		 * @param data    HTML fragment from the server
 		 * @param append  true to append (lazy load), false to replace (new search)
+		 * @param more    '1'/'0' from the X-Zyppy-More header, or null if unknown
 		 */
-		function renderBatch(data, append) {
+		function renderBatch(data, append, more) {
 			var n = countResults(data);
 
 			if (append) {
@@ -116,8 +118,15 @@ $( document ).ready(function() {
 
 			state.offset += n;
 
-			if (n < BATCH) {
+			// The server tells us authoritatively whether more results remain
+			// (batch size is configured server-side). Fall back to the count
+			// heuristic only if the header is missing (older server).
+			if (more === '1') {
+				state.done = false;
+			} else if (more === '0') {
 				state.done = true;
+			} else {
+				state.done = (n < BATCH);
 			}
 
 			// Update the status line.
@@ -150,7 +159,7 @@ $( document ).ready(function() {
 			// Served from cache — no network round-trip needed.
 			if (cache[cacheKey] !== undefined) {
 				spinner.removeClass('is-active');
-				renderBatch(cache[cacheKey], append);
+				renderBatch(cache[cacheKey].data, append, cache[cacheKey].more);
 				return;
 			}
 
@@ -172,19 +181,19 @@ $( document ).ready(function() {
 				zyppy_search: search,
 				id:           moduleId,
 				page:         pageId,
-				zyppy_offset: state.offset,
-				zyppy_limit:  BATCH
+				zyppy_offset: state.offset
 			};
 			if (state.queryType) {
 				searchData.query_type = state.queryType;
 			}
 
 			state.request = $.get(action, searchData)
-				.done(function(data) {
-					cache[cacheKey] = data;
+				.done(function(data, textStatus, xhr) {
+					var more = xhr.getResponseHeader('X-Zyppy-More');
+					cache[cacheKey] = { data: data, more: more };
 					spinner.removeClass('is-active');
 					state.loading = false;
-					renderBatch(data, append);
+					renderBatch(data, append, more);
 				})
 				.fail(function(xhr) {
 					state.loading = false;
