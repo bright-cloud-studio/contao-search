@@ -301,27 +301,10 @@ class ZyppySearch extends ModuleSearch
 				$totalLength = $lengths[1];
 			}
 
-			$arrResult = $objResult->getResults($to-$from+1, $from-1);
-
-			// Relevance is shown relative to the top hit (100%). For lazy-loaded
-			// batches beyond the first, use the overall top relevance so the
-			// percentages stay consistent across batches instead of resetting.
-			$dblMaxRelevance = $arrResult[0]['relevance'] ?? 0;
-
-			if ($from > 1)
-			{
-				$arrTop = $objResult->getResults(1, 0);
-
-				if (!empty($arrTop) && $arrTop[0]['relevance'] > 0)
-				{
-					$dblMaxRelevance = $arrTop[0]['relevance'];
-				}
-			}
-
-			if ($dblMaxRelevance <= 0)
-			{
-				$dblMaxRelevance = 1;
-			}
+			// Fetch the result slice and the relevance denominator. Subclasses
+			// (e.g. weighted search) override fetchResults() to reorder the full
+			// result set before it is sliced.
+			[$arrResult, $dblMaxRelevance] = $this->fetchResults($objResult, $from, $to, $count);
 
 			// Get the results
 			foreach (array_keys($arrResult) as $i)
@@ -447,6 +430,43 @@ class ZyppySearch extends ModuleSearch
 				throw new ResponseException(new Response($this->Template->results, 200, ['Content-Type' => 'text/html; charset=UTF-8']));
 			}
 		}
+	}
+
+	/**
+	 * Fetch the result rows for the requested range together with the relevance
+	 * denominator (the top hit = 100%).
+	 *
+	 * Subclasses can override this to reorder the full result set before it is
+	 * sliced — e.g. weighted search sorts by weight. Returns a tuple of
+	 * array(array $results, float $maxRelevance).
+	 *
+	 * @param \Contao\SearchResult $objResult
+	 */
+	protected function fetchResults($objResult, int $from, int $to, int $count): array
+	{
+		$arrResult = $objResult->getResults($to - $from + 1, $from - 1);
+
+		// Results are already ordered by relevance, so the first row is the most
+		// relevant. For lazy-loaded batches beyond the first, fetch it explicitly
+		// so the percentages stay consistent across batches.
+		$dblMaxRelevance = $arrResult[0]['relevance'] ?? 0;
+
+		if ($from > 1)
+		{
+			$arrTop = $objResult->getResults(1, 0);
+
+			if (!empty($arrTop) && $arrTop[0]['relevance'] > 0)
+			{
+				$dblMaxRelevance = $arrTop[0]['relevance'];
+			}
+		}
+
+		if ($dblMaxRelevance <= 0)
+		{
+			$dblMaxRelevance = 1;
+		}
+
+		return array($arrResult, $dblMaxRelevance);
 	}
 
 	/**
