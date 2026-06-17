@@ -17,6 +17,7 @@ use Contao\Module;
 use Contao\ModuleModel;
 use Contao\PageModel;
 use Contao\System;
+use Contao\ThemeModel;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -89,10 +90,16 @@ class SearchController
 
             // Theme template overrides (e.g. templates/<theme>) resolve via
             // $objPage->templateGroup, which a full page render sets from the
-            // layout. Replicate that so the AJAX results use the same custom
-            // templates as the on-page results instead of the bundle defaults.
-            if ($objPage->layout && ($objLayout = LayoutModel::findByPk($objPage->layout)) !== null) {
-                $objPage->templateGroup = $objLayout->templates;
+            // layout's THEME (tl_theme.templates), not the layout itself.
+            // Replicate that so the AJAX results use the same custom templates
+            // as the on-page results instead of the bundle defaults.
+            if (
+                $objPage->layout
+                && ($objLayout = LayoutModel::findByPk($objPage->layout)) !== null
+                && ($objTheme = ThemeModel::findByPk($objLayout->pid)) !== null
+                && $objTheme->templates
+            ) {
+                $objPage->templateGroup = $objTheme->templates;
             }
 
             if ($objPage->language) {

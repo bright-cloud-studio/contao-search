@@ -33,3 +33,17 @@
 @keyframes zyppy_spin {
 	to { transform: rotate(360deg); }
 }
+
+/* Status line below the results: "Loading…", "No more results", "No results found" */
+.zyppy_status {
+	text-align: center;
+	padding: 1rem 0;
+	opacity: 0.7;
+	font-size: 0.9em;
+}
+
+/* Empty when there is no message, so it takes up no space */
+.zyppy_status:empty {
+	display: none;
+	padding: 0;
+}

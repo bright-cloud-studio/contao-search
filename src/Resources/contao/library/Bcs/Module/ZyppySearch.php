@@ -235,8 +235,33 @@ class ZyppySearch extends ModuleSearch
 			$from = 1;
 			$to = $count;
 
+			// AJAX lazy loading: return a slice defined by offset/limit so the
+			// client can fetch results in batches as the user scrolls.
+			if ($boolAjax)
+			{
+				$intOffset = max(0, (int) Input::get('zyppy_offset'));
+				$intLimit = (int) Input::get('zyppy_limit');
+
+				if ($intLimit < 1)
+				{
+					$intLimit = 20;
+				}
+				elseif ($intLimit > 50)
+				{
+					$intLimit = 50;
+				}
+
+				// Past the end — return nothing so the client stops requesting.
+				if ($intOffset >= $count)
+				{
+					throw new ResponseException(new Response('', 200, ['Content-Type' => 'text/html; charset=UTF-8']));
+				}
+
+				$from = $intOffset + 1;
+				$to = min($intOffset + $intLimit, $count);
+			}
 			// Pagination
-			if ($this->perPage > 0)
+			elseif ($this->perPage > 0)
 			{
 				$id = 'page_s' . $this->id;
 				$page = Input::get($id) ?? 1;
@@ -278,6 +303,26 @@ class ZyppySearch extends ModuleSearch
 
 			$arrResult = $objResult->getResults($to-$from+1, $from-1);
 
+			// Relevance is shown relative to the top hit (100%). For lazy-loaded
+			// batches beyond the first, use the overall top relevance so the
+			// percentages stay consistent across batches instead of resetting.
+			$dblMaxRelevance = $arrResult[0]['relevance'] ?? 0;
+
+			if ($from > 1)
+			{
+				$arrTop = $objResult->getResults(1, 0);
+
+				if (!empty($arrTop) && $arrTop[0]['relevance'] > 0)
+				{
+					$dblMaxRelevance = $arrTop[0]['relevance'];
+				}
+			}
+
+			if ($dblMaxRelevance <= 0)
+			{
+				$dblMaxRelevance = 1;
+			}
+
 			// Get the results
 			foreach (array_keys($arrResult) as $i)
 			{
@@ -294,8 +339,11 @@ class ZyppySearch extends ModuleSearch
 				$objTemplate->link = $arrResult[$i]['title'];
 				$objTemplate->url = StringUtil::specialchars(urldecode($arrResult[$i]['url']), true, true);
 				$objTemplate->title = StringUtil::specialchars(StringUtil::stripInsertTags(($arrResult[$i]['title'] ?? '')));
-				$objTemplate->class = ($i == 0 ? 'first ' : '') . ((empty($arrResult[$i+1])) ? 'last ' : '') . (($i % 2 == 0) ? 'even' : 'odd');
-				$objTemplate->relevance = sprintf($GLOBALS['TL_LANG']['MSC']['relevance'], number_format($arrResult[$i]['relevance'] / $arrResult[0]['relevance'] * 100, 2) . '%');
+				// Use the absolute index so first/last/even-odd stay correct
+				// across lazy-loaded batches.
+				$intAbs = ($from - 1) + $i;
+				$objTemplate->class = ($intAbs == 0 ? 'first ' : '') . ($intAbs == $count - 1 ? 'last ' : '') . (($intAbs % 2 == 0) ? 'even' : 'odd');
+				$objTemplate->relevance = sprintf($GLOBALS['TL_LANG']['MSC']['relevance'], number_format($arrResult[$i]['relevance'] / $dblMaxRelevance * 100, 2) . '%');
 				$objTemplate->unit = $GLOBALS['TL_LANG']['UNITS'][1];
 
 
