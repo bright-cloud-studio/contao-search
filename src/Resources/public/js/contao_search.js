@@ -36,8 +36,10 @@ $( document ).ready(function() {
 		var spinner = wrapper.find('.zyppy_spinner').first();
 
 		// Status line for "Loading…", "No more results" and "No results found".
+		// It lives inside .results (as the last child) so it sits at the very
+		// bottom of the list and scrolls with the content.
 		if (wrapper.find('.zyppy_status').length < 1) {
-			results.after('<div class="zyppy_status" aria-live="polite"></div>');
+			results.append('<div class="zyppy_status" aria-live="polite"></div>');
 		}
 		var status = wrapper.find('.zyppy_status').first();
 
@@ -76,6 +78,16 @@ $( document ).ready(function() {
 			status.attr('class', 'zyppy_status' + (modifier ? ' ' + modifier : '')).text(text || '');
 		}
 
+		/** Remove rendered results but keep the status line in place. */
+		function clearResults() {
+			results.children().not(status).remove();
+		}
+
+		/** How many actual result blocks are currently rendered. */
+		function resultCount() {
+			return results.children().not(status).length;
+		}
+
 		/** Is the bottom of the results list within the load threshold? */
 		function nearBottom() {
 			if (results.length < 1 || !results.is(':visible')) {
@@ -95,6 +107,43 @@ $( document ).ready(function() {
 			return rect.bottom - viewH <= LOAD_THRESHOLD;
 		}
 
+		/** Is the list scrolled essentially all the way to the bottom? */
+		function atBottom() {
+			if (results.length < 1 || !results.is(':visible')) {
+				return false;
+			}
+
+			var el = results[0];
+
+			// Results in their own scroll container (e.g. the popup).
+			if (el.scrollHeight > el.clientHeight + 1) {
+				return el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
+			}
+
+			// Otherwise the whole list fits / uses the page scroll — the bottom
+			// is reached once the results' bottom edge is within the viewport.
+			var rect = el.getBoundingClientRect();
+			var viewH = window.innerHeight || document.documentElement.clientHeight;
+			return rect.bottom - viewH <= 2;
+		}
+
+		/**
+		 * Show the "No more results" line only once the user has actually
+		 * scrolled to the bottom. "No results found" still shows immediately.
+		 */
+		function refreshDoneStatus() {
+			if (!state.done) {
+				return;
+			}
+			if (resultCount() < 1) {
+				setStatus(MSG_EMPTY, 'is-empty');
+			} else if (atBottom()) {
+				setStatus(MSG_NO_MORE, 'is-done');
+			} else {
+				setStatus('');
+			}
+		}
+
 		function maybeLoadMore() {
 			if (!state.done && !state.loading && state.keywords.length > 0 && nearBottom()) {
 				loadBatch(true);
@@ -111,9 +160,11 @@ $( document ).ready(function() {
 			var n = countResults(data);
 
 			if (append) {
-				results.append(data);
+				// Keep the status line as the last child of .results.
+				$(data).insertBefore(status);
 			} else {
-				results.html(data).hide().fadeIn(150);
+				clearResults();
+				$(data).insertBefore(status).hide().fadeIn(150);
 			}
 
 			state.offset += n;
@@ -129,13 +180,10 @@ $( document ).ready(function() {
 				state.done = (n < BATCH);
 			}
 
-			// Update the status line.
+			// Update the status line. "No more results" is deferred until the
+			// user actually scrolls to the bottom (see refreshDoneStatus).
 			if (state.done) {
-				if (results.children().length < 1) {
-					setStatus(MSG_EMPTY, 'is-empty');
-				} else {
-					setStatus(MSG_NO_MORE, 'is-done');
-				}
+				refreshDoneStatus();
 			} else {
 				setStatus('');
 			}
@@ -209,7 +257,7 @@ $( document ).ready(function() {
 		function newSearch() {
 			state.offset = 0;
 			state.done = false;
-			results.empty();
+			clearResults();
 			setStatus('');
 			loadBatch(false);
 		}
@@ -226,7 +274,7 @@ $( document ).ready(function() {
 			if (searchKeywords.length < 1 || searchKeywords === 'search the site') {
 				if (state.request) { state.request.abort(); }
 				spinner.removeClass('is-active');
-				results.empty();
+				clearResults();
 				setStatus('');
 				state.keywords = '';
 				state.offset = 0;
@@ -257,9 +305,16 @@ $( document ).ready(function() {
 			newSearch();
 		});
 
+		// On scroll/resize, fetch the next batch if needed and re-evaluate
+		// whether the "No more results" line should now be shown.
+		function onScroll() {
+			maybeLoadMore();
+			refreshDoneStatus();
+		}
+
 		// Lazy-load triggers: page scroll, the results container's own scroll,
 		// and window resize (a wider viewport may reveal the threshold).
-		$(window).on('scroll resize', maybeLoadMore);
-		results.on('scroll', maybeLoadMore);
+		$(window).on('scroll resize', onScroll);
+		results.on('scroll', onScroll);
 	});
 });
