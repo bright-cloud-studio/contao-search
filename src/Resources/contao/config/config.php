@@ -1,6 +1,5 @@
-
 <?php
- 
+
 /**
 * @copyright  Bright Cloud Studio
 * @author     Bright Cloud Studio
